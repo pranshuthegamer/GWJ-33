@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Assets/Fonts/ButtonFont.tres" type="DynamicFont" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Button
+
+
+
+func _pressed():
+	Auto.change_scene_from_level(\"res://Scenes/Levels/001.tscn\",self.get_parent())
+	
+"
+
+[node name="Menu" type="Node2D"]
+scale = Vector2( 1.16742, 1.10131 )
+
+[node name="Button" type="Button" parent="."]
+margin_left = 106.217
+margin_top = 90.8009
+margin_right = 363.217
+margin_bottom = 170.801
+custom_fonts/font = ExtResource( 1 )
+text = "P L A Y"
+flat = true
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

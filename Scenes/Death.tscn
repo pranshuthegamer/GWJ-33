@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Assets/Fonts/ButtonFont.tres" type="DynamicFont" id=1]
+[ext_resource path="res://Scripts/Death.gd" type="Script" id=2]
+
+[node name="Death" type="Node2D"]
+
+[node name="Button" type="Button" parent="."]
+margin_left = 72.0
+margin_top = 116.0
+margin_right = 440.0
+margin_bottom = 196.0
+custom_fonts/font = ExtResource( 1 )
+text = "Respawn"
+flat = true
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="."]
+margin_left = 224.0
+margin_top = 88.0
+margin_right = 288.0
+margin_bottom = 102.0
+text = "YOU DIED"
+__meta__ = {
+"_edit_use_anchors_": false
+}
