@@ -16,10 +16,10 @@ func _pressed():
 scale = Vector2( 1.16742, 1.10131 )
 
 [node name="Button" type="Button" parent="."]
-margin_left = 106.217
-margin_top = 90.8009
-margin_right = 363.217
-margin_bottom = 170.801
+margin_left = 246.698
+margin_top = 225.186
+margin_right = 630.698
+margin_bottom = 457.186
 custom_fonts/font = ExtResource( 1 )
 text = "P L A Y"
 flat = true
