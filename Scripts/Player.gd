@@ -6,12 +6,14 @@ var shooting = false
 var ShootingSpeed = 0.15
 var ShotSpeed = 0
 var move_and_slide
+var recoil_timer
 
 var health = 100
 
 var bullet = preload("res://Scenes/bullet.tscn")
 
 func _process(delta):
+	
 	ShotSpeed += delta
 	
 	if health <= 0:
@@ -20,12 +22,13 @@ func _process(delta):
 	
 	#if the shot cooldown is met, the player shoots
 	if shooting and ShotSpeed >= ShootingSpeed:
-		position -= transform.x * 2
+		position -= transform.x * 3
 		var shot = bullet.instance()
 		get_node("/root/Main").add_child(shot)
 		shot.damage = 10
 		shot.transform = $Barrel.global_transform
 		ShotSpeed = 0
+	
 	
 	#checks if you released left click
 	if Input.is_action_just_released("click"):
