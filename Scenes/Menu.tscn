@@ -6,7 +6,7 @@
 script/source = "extends Button
 
 
-
+#this changes the scene
 func _pressed():
 	Auto.change_scene_from_level(\"res://Scenes/Levels/001.tscn\",self.get_parent())
 	
@@ -16,10 +16,10 @@ func _pressed():
 scale = Vector2( 1.16742, 1.10131 )
 
 [node name="Button" type="Button" parent="."]
-margin_left = 246.698
-margin_top = 225.186
-margin_right = 630.698
-margin_bottom = 457.186
+margin_left = 247.0
+margin_top = 174.0
+margin_right = 631.0
+margin_bottom = 465.0
 custom_fonts/font = ExtResource( 1 )
 text = "P L A Y"
 flat = true

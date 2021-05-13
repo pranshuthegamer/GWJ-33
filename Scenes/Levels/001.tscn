@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Scripts/Scene/all_scenes.gd" type="Script" id=1]
+[ext_resource path="res://icon.png" type="Texture" id=2]
 
 [sub_resource type="StreamTexture" id=1]
 flags = 4
-load_path = "res://.import/Grass1.png-af64fc8416a7ada16c1d2cb9ab046663.stex"
 
 [sub_resource type="TileSet" id=2]
 0/name = "Grass1.png 0"
@@ -40,3 +40,8 @@ tile_set = SubResource( 2 )
 cell_size = Vector2( 32, 32 )
 format = 1
 tile_data = PoolIntArray( 262148, 0, 65536, 262149, 0, 65537, 262150, 0, 65537, 327684, 0, 65536, 327685, 0, 65537, 327686, 0, 65537, 393220, 0, 65536, 393221, 0, 65537, 393222, 0, 65537 )
+
+[node name="icon" type="Sprite" parent="."]
+position = Vector2( 384, 384 )
+scale = Vector2( 12, 12 )
+texture = ExtResource( 2 )

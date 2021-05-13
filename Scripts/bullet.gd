@@ -14,9 +14,17 @@ func _on_bullet_body_entered(body):
 
 func _enter_tree():
 	var time = Timer.new()
+	var lighting = Timer.new()
+	lighting.connect("timeout",self,"_on_light_timeout")
+	add_child(lighting)
+	lighting.start(0.05)
 	time.connect("timeout",self,"_on_timer_timeout")
 	add_child(time)
 	time.start(1)
 
 func _on_timer_timeout():
 	queue_free()
+
+func _on_light_timeout():
+	$Light2D.energy -= 0.1
+	$Light2D.scale -= Vector2(0.01,0.01)
