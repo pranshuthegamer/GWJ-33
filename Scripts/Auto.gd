@@ -11,9 +11,11 @@ func _enter_tree():
 	get_node("/root/Main").add_child(death.instance())
 	$"/root/Main/Death".hide()
 
+#called if you wanna change scene
 func change_scene_from_level(scene,objectt):
 	tempscene = load(scene)
 	objectt.get_parent().add_child(tempscene.instance())
+	print(objectt.name ," requested to change scene to ",scene)
 	objectt.queue_free()
 
 func died():
