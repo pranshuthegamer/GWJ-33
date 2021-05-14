@@ -1,6 +1,6 @@
 extends Node2D
 
-onready var player = get_node("Player")
+onready var player = Auto.character
 onready var enemy = get_node("Enemy")
 
 

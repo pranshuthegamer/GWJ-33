@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Assets/Fonts/ButtonFont.tres" type="DynamicFont" id=1]
+[ext_resource path="res://Assets/Fonts/ADAM.CG PRO.otf" type="DynamicFontData" id=2]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Button
@@ -11,6 +12,13 @@ func _pressed():
 	Auto.change_scene_from_level(\"res://Scenes/Levels/001.tscn\",self.get_parent())
 	
 "
+
+[sub_resource type="DynamicFont" id=2]
+size = 22
+outline_size = 1
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+font_data = ExtResource( 2 )
 
 [node name="Menu" type="Node2D"]
 scale = Vector2( 1.16742, 1.10131 )
@@ -24,6 +32,22 @@ custom_fonts/font = ExtResource( 1 )
 text = "P L A Y"
 flat = true
 script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+margin_left = 349.489
+margin_top = 464.901
+margin_right = 534.489
+margin_bottom = 617.901
+custom_fonts/normal_font = SubResource( 2 )
+text = "Created By:
+Revdeluve
+Nick Malko
+PranshuTG
+BeatrixPotter
+Loop Zoop"
 __meta__ = {
 "_edit_use_anchors_": false
 }

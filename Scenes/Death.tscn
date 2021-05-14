@@ -4,6 +4,7 @@
 [ext_resource path="res://Scripts/Death.gd" type="Script" id=2]
 
 [node name="Death" type="Node2D"]
+z_index = 2
 
 [node name="Button" type="Button" parent="."]
 margin_left = 72.0
