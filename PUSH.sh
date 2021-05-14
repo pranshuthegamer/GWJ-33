@@ -50,9 +50,9 @@ then
 else
   exit
 fi
-echo "Are you Ready to push these new files??(yes/no)"
 echo "Note that this will be pushed to Origin-Master"
 git status
+echo "Are you Ready to push these new files??(yes/no)"
 read pushCheck
 clear
 if [ $pushCheck == yes ]
