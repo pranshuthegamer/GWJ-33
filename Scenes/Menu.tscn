@@ -6,7 +6,7 @@
 script/source = "extends Button
 
 
-#this changes the scene
+
 func _pressed():
 	Auto.change_scene_from_level(\"res://Scenes/Levels/001.tscn\",self.get_parent())
 	
