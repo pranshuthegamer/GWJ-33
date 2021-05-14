@@ -4,7 +4,7 @@ extends KinematicBody2D
 signal damage
 
 export var speed = 150.0
-export var damage = 20.0
+export var damage = 0.25
 var health = 100.0
 var target = KinematicBody2D.new() setget set_target
 

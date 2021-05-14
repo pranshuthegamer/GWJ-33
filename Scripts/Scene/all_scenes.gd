@@ -12,4 +12,5 @@ func _ready() -> void:
 
 
 func _on_Enemy_damage(p_collider, p_damage):
-	p_collider.hit(p_damage)
+	if p_collider is KinematicBody2D:
+		p_collider.hit(p_damage)
