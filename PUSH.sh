@@ -45,6 +45,7 @@ if [ $addCheck == yes ]
 then
   echo "Please Commit why is this to be Pushed?"
   read CommitInput
+  clear
   git commit -m "$CommitInput"
 else
   exit
@@ -53,6 +54,7 @@ echo "Are you Ready to push these new files??(yes/no)"
 echo "Note that this will be pushed to Origin-Master"
 git status
 read pushCheck
+clear
 if [ $pushCheck == yes ]
 then
   echo "PUSHING........................................"
