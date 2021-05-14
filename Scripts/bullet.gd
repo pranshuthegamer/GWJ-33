@@ -1,6 +1,6 @@
 extends Area2D
 
-var speed = 750
+var speed = 1000
 var damage = null
 
 func _physics_process(delta):
@@ -8,8 +8,9 @@ func _physics_process(delta):
 
 
 func _on_bullet_body_entered(body):
+	if body.is_in_group("mob"):
+		body.hit(damage)
 	queue_free()
-	body.hit(damage)
 
 
 func _enter_tree():

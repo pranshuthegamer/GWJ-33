@@ -17,12 +17,12 @@ func _physics_process(delta):
 	var dir = position.direction_to(target.position)
 	var velocity = dir * speed
 	var collision_result = move_and_collide(velocity * delta)
-	if collision_result != null:
-		emit_signal("damage", collision_result.collider, damage)
+	#if collision_result != null:
+	#	emit_signal("damage", collision_result.collider, damage)
 
 
-func hit(damage):
-	health -= damage
+func hit(dmg):
+	health -= dmg
 	print(health)
 	if health <= 0:
 		queue_free()
