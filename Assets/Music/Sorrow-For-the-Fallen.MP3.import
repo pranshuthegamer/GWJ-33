@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/Sorrow-For-the-Fallen.MP3-54a8e5b2f024812be95178e11de6296b.mp3str"
+
+[deps]
+
+source_file="res://Assets/Music/Sorrow-For-the-Fallen.MP3"
+dest_files=[ "res://.import/Sorrow-For-the-Fallen.MP3-54a8e5b2f024812be95178e11de6296b.mp3str" ]
+
+[params]
+
+loop=true
+loop_offset=0
