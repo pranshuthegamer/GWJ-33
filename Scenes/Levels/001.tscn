@@ -5,6 +5,7 @@
 [node name="Level" type="Node2D"]
 
 [node name="Start" type="Node2D" parent="."]
+position = Vector2( 512, 192 )
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource( 1 )

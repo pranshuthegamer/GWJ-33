@@ -12,3 +12,5 @@ func _cng_scene(scene,caller):
 	var tempscene = load(scene).instance()
 	$"/root/Main".add_child(tempscene)
 	caller.queue_free()
+	Char.get_node("Camera2D").current = true
+	Char.transform = tempscene.get_node("Start").transform
