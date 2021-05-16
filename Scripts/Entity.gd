@@ -12,6 +12,7 @@ onready var ray_right: RayCast2D = $RayCasts/Right
 
 var _direction := Vector2.ZERO
 
+#input
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up") && !ray_up.is_colliding():
 		_direction += Vector2.UP
