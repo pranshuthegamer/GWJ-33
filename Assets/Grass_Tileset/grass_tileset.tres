@@ -1,7 +1,8 @@
-[gd_resource type="TileSet" load_steps=3 format=2]
+[gd_resource type="TileSet" load_steps=4 format=2]
 
 [ext_resource path="res://Assets/Grass_Tileset/grass_tileset_16x16.png" type="Texture" id=1]
 [ext_resource path="res://Assets/Grass_Tileset/Custom.png" type="Texture" id=2]
+[ext_resource path="res://Assets/Grass_Tileset/custom 2/Sprite-0001-Sheet.png" type="Texture" id=3]
 
 [resource]
 0/name = "grass_tileset_16x16.png 0"
@@ -50,3 +51,26 @@
 1/shape_one_way_margin = 0.0
 1/shapes = [  ]
 1/z_index = 0
+2/name = "Sprite-0001-Sheet.png 2"
+2/texture = ExtResource( 3 )
+2/tex_offset = Vector2( 0, 0 )
+2/modulate = Color( 1, 1, 1, 1 )
+2/region = Rect2( 0, 0, 512, 64 )
+2/tile_mode = 1
+2/autotile/bitmask_mode = 1
+2/autotile/bitmask_flags = [ Vector2( 0, 0 ), 511, Vector2( 0, 1 ), 18, Vector2( 1, 0 ), 63, Vector2( 1, 1 ), 144, Vector2( 2, 0 ), 504, Vector2( 2, 1 ), 56, Vector2( 3, 0 ), 432, Vector2( 3, 1 ), 48, Vector2( 4, 0 ), 216, Vector2( 4, 1 ), 24, Vector2( 5, 0 ), 219, Vector2( 6, 0 ), 27, Vector2( 7, 0 ), 438, Vector2( 8, 0 ), 54, Vector2( 9, 0 ), 191, Vector2( 10, 0 ), 446, Vector2( 11, 0 ), 506, Vector2( 12, 0 ), 251, Vector2( 13, 0 ), 16, Vector2( 14, 0 ), 146, Vector2( 15, 0 ), 186 ]
+2/autotile/icon_coordinate = Vector2( 0, 0 )
+2/autotile/tile_size = Vector2( 32, 32 )
+2/autotile/spacing = 0
+2/autotile/occluder_map = [  ]
+2/autotile/navpoly_map = [  ]
+2/autotile/priority_map = [  ]
+2/autotile/z_index_map = [  ]
+2/occluder_offset = Vector2( 0, 0 )
+2/navigation_offset = Vector2( 0, 0 )
+2/shape_offset = Vector2( 0, 0 )
+2/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+2/shape_one_way = false
+2/shape_one_way_margin = 0.0
+2/shapes = [  ]
+2/z_index = 0
