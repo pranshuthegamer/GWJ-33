@@ -3,6 +3,7 @@ extends Area2D
 
 
 export var tile_size: int = 32
+
 onready var sprite: Sprite = $Sprite
 onready var ray_up: RayCast2D = $RayCasts/Up
 onready var ray_down: RayCast2D = $RayCasts/Down
