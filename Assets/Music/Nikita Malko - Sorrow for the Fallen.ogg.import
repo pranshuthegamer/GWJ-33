@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/Nikita Malko - Sorrow for the Fallen.ogg-c9987b4d4be2299577261988cdd5345f.oggstr"
+
+[deps]
+
+source_file="res://Assets/Music/Nikita Malko - Sorrow for the Fallen.ogg"
+dest_files=[ "res://.import/Nikita Malko - Sorrow for the Fallen.ogg-c9987b4d4be2299577261988cdd5345f.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0
