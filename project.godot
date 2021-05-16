@@ -9,13 +9,13 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Reference",
-"class": "Player",
+"base": "Area2D",
+"class": "Entity",
 "language": "GDScript",
 "path": "res://Scripts/Entity.gd"
 } ]
 _global_script_class_icons={
-"Player": ""
+"Entity": ""
 }
 
 [application]
