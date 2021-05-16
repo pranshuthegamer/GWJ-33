@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Assets/Grass_Tileset/grass_tileset.tres" type="TileSet" id=1]
+
+[node name="Level" type="Node2D"]
+
+[node name="Start" type="Node2D" parent="."]
+position = Vector2( 512, 576 )
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 32, 32 )
+format = 1
+tile_data = PoolIntArray( 458764, 1, 0, 917517, 1, 65539, 917518, 1, 6, 917519, 1, 6, 917520, 1, 65536, 983053, 1, 5, 983054, 1, 1, 983055, 1, 1, 983056, 1, 4, 1048589, 1, 5, 1048590, 1, 1, 1048591, 1, 1, 1048592, 1, 4, 1114125, 1, 65538, 1114126, 1, 7, 1114127, 1, 7, 1114128, 1, 65537 )
