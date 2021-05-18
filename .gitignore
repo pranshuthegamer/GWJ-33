@@ -1,3 +1,4 @@
 # All assets except fonts.
 **/*.md5
 **/*.stex
+.import/*
