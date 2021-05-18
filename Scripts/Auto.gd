@@ -12,9 +12,12 @@ func _ready():
 		var children = $"/root".get_children()
 		var i = children.find(self)
 		children.remove(i)
-		children[0].add_child(Char)
-		if get_node_or_null(str("/root/" + children[0].name + "/Start")) != null:
-			Char.transform = get_node(str("/root/" + children[0].name + "/Start")).transform
+		if children[0] is KinematicBody2D:
+			pass
+		else:
+			children[0].add_child(Char)
+			if get_node_or_null(str("/root/" + children[0].name + "/Start")) != null:
+				Char.transform = get_node(str("/root/" + children[0].name + "/Start")).transform
 
 func _cng_scene(scene,caller):
 	var tempscene = load(scene).instance()
