@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/talking_granny5.png-02ab6b45606b4c62d31e611897fc1d32.stex"
+path="res://.import/granny walking.png-69db6fb3abb486d74db2cef06e81611d.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Charecters/granny/talking_granny5.png"
-dest_files=[ "res://.import/talking_granny5.png-02ab6b45606b4c62d31e611897fc1d32.stex" ]
+source_file="res://Assets/Characters/granny/granny walking.png"
+dest_files=[ "res://.import/granny walking.png-69db6fb3abb486d74db2cef06e81611d.stex" ]
 
 [params]
 
