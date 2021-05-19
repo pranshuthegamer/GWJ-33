@@ -2,7 +2,7 @@ class_name Entity
 extends KinematicBody2D
 
 
-export var speed: float = 200.0
+export var speed: float = 100.0
 
 onready var sprite: Sprite = $Sprite
 var _direction := Vector2.ZERO
