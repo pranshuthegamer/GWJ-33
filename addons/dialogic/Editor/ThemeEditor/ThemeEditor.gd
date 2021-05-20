@@ -5,7 +5,6 @@ var editor_reference
 onready var master_tree = get_node('../MasterTreeContainer/MasterTree')
 onready var settings_editor = get_node('../SettingsEditor')
 var current_theme : String = ''
-
 var use_advanced_themes := false
 
 # When loading the variables to the input fields in the 
@@ -15,11 +14,26 @@ var use_advanced_themes := false
 # or not.
 var loading : bool = true 
 
+
+# If the first time you open a theme it is a "full_width" one, the editor
+# doesn't trigger the Panel resized() signal before the dialog resize_main()
+# So what I do here, is doing a check for the first time and force a double
+# refresh that will make sure that the full_width background will display 
+# as expected.
+
+# The stuff used for this hack are:
+# Variable:        first_time_loading_theme_full_size_bug
+# Node:            $FirstTimeLoadingFullSizeBug
+# This function:   _on_FirstTimeLoadingFullSizeBug_timeout()
+
+# If you know how to fix this, please let me know or send a pull request :)
+var first_time_loading_theme_full_size_bug := 0
+
+
 # The amazing and revolutionary path system that magically works and you can't
 # complain because "that is not how you are supposed to work". If there was only
 # a way to set an id and then access that node via id...
 # Here you have paths in all its glory. Praise the paths (っ´ω`c)♡
-
 onready var advanced_containers := {
 	'buttons' : {
 		'container': $"VBoxContainer/TabContainer/Choice Buttons/Column3/GridContainer",
@@ -29,14 +43,16 @@ onready var advanced_containers := {
 
 onready var n : Dictionary = {
 	# Dialog Text
-	'theme_text_shadow': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/HBoxContainer2/CheckBoxShadow",
-	'theme_text_shadow_color': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/HBoxContainer2/ColorPickerButtonShadow",
-	'theme_text_color': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/ColorPickerButton",
-	'theme_font': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/FontButton",
-	'theme_shadow_offset_x': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/HBoxContainer/ShadowOffsetX",
-	'theme_shadow_offset_y': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/HBoxContainer/ShadowOffsetY",
-	'theme_text_speed': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/TextSpeed",
-	'alignment': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/HBoxContainer3/Alignment",
+	'theme_text_shadow': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/HBoxContainer2/CheckBoxShadow",
+	'theme_text_shadow_color': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/HBoxContainer2/ColorPickerButtonShadow",
+	'theme_text_color': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/ColorPickerButton",
+	'theme_font': $"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/RegularFont/RegularFontButton",
+	'theme_font_bold':$"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/BoldFont/BoldFontButton",
+	'theme_font_italic':$"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/ItalicFont/ItalicFontButton",
+	'theme_shadow_offset_x': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/HBoxContainer/ShadowOffsetX",
+	'theme_shadow_offset_y': $"VBoxContainer/TabContainer/Dialog Text/Column2/GridContainer/HBoxContainer/ShadowOffsetY",
+	'theme_text_speed': $"VBoxContainer/TabContainer/Dialog Text/Column3/GridContainer/TextSpeed",
+	'alignment': $"VBoxContainer/TabContainer/Dialog Text/Column3/GridContainer/HBoxContainer3/Alignment",
 	
 	# Dialog box
 	'background_texture_button_visible': $"VBoxContainer/TabContainer/Dialog Box/Column/GridContainer/HBoxContainer3/CheckBox",
@@ -56,8 +72,10 @@ onready var n : Dictionary = {
 	'bottom_gap': $"VBoxContainer/TabContainer/Dialog Box/Column/GridContainer/HBoxContainer5/BottomGap",
 	'background_modulation': $"VBoxContainer/TabContainer/Dialog Box/Column/GridContainer/HBoxContainer6/CheckBox",
 	'background_modulation_color': $"VBoxContainer/TabContainer/Dialog Box/Column/GridContainer/HBoxContainer6/ColorPickerButton",
+	'background_full_width': $"VBoxContainer/TabContainer/Dialog Box/Column/GridContainer/HBoxContainer7/CheckBox",
 	
 	# Character Names
+	'name_font': $"VBoxContainer/TabContainer/Name Label/Column/GridContainer/RegularFont/NameFontButton",
 	'name_auto_color': $"VBoxContainer/TabContainer/Name Label/Column/GridContainer/CharacterColor",
 	'name_background_visible': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer2/CheckBox",
 	'name_background': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer2/ColorPickerButton",
@@ -70,6 +88,9 @@ onready var n : Dictionary = {
 	'name_bottom_gap': $"VBoxContainer/TabContainer/Name Label/Column3/GridContainer/HBoxContainer5/BottomGap",
 	'name_background_modulation': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer6/CheckBox",
 	'name_background_modulation_color': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer6/ColorPickerButton",
+	'name_padding_x': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer/NamePaddingX",
+	'name_padding_y': $"VBoxContainer/TabContainer/Name Label/Column2/GridContainer/HBoxContainer/NamePaddingY",
+	
 	
 	# Choice Buttons
 	'button_text_color_enabled': $"VBoxContainer/TabContainer/Choice Buttons/Column/GridContainer/HBoxContainer4/CheckBox2",
@@ -101,6 +122,12 @@ onready var n : Dictionary = {
 	
 }
 
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 						GENERAL EDITOR STUFF
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 func _ready() -> void:
 	# Signal connection to free up some memory
 	connect("visibility_changed", self, "_on_visibility_changed")
@@ -114,6 +141,13 @@ func _ready() -> void:
 	
 	var title_style = $"VBoxContainer/TabContainer/Dialog Text/Column/SectionTitle".get('custom_styles/normal')
 	title_style.set('bg_color', get_color("prop_category", "Editor"))
+	
+	$"VBoxContainer/TabContainer/Name Label/Column/GridContainer/RegularFont/NameFontOpen".icon = get_icon("Edit", "EditorIcons")
+	$"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/BoldFont/BoldFontOpen".icon = get_icon("Edit", "EditorIcons")
+	$"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/ItalicFont/ItalicFontOpen".icon = get_icon("Edit", "EditorIcons")
+	$"VBoxContainer/TabContainer/Dialog Text/Column/GridContainer/RegularFont/RegularFontOpen".icon = get_icon("Edit", "EditorIcons")
+	
+	
 	# Force preview update
 	_on_visibility_changed()
 
@@ -152,6 +186,7 @@ func load_theme(filename):
 
 	n['background_modulation'].pressed = theme.get_value('background', 'modulation', false)
 	n['background_modulation_color'].color = Color(theme.get_value('background', 'modulation_color', '#ffffffff'))
+	n['background_full_width'].pressed = theme.get_value('background', 'full_width', false)
 	
 	
 	var size_value = theme.get_value('box', 'size', Vector2(910, 167))
@@ -189,6 +224,8 @@ func load_theme(filename):
 	# Text
 	n['theme_text_speed'].value = theme.get_value('text','speed', 2)
 	n['theme_font'].text = DialogicResources.get_filename_from_path(theme.get_value('text', 'font', 'res://addons/dialogic/Example Assets/Fonts/DefaultFont.tres'))
+	n['theme_font_bold'].text = DialogicResources.get_filename_from_path(theme.get_value('text', 'bold_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultBoldFont.tres'))
+	n['theme_font_italic'].text = DialogicResources.get_filename_from_path(theme.get_value('text', 'italic_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultItalicFont.tres'))
 	n['theme_text_color'].color = Color(theme.get_value('text', 'color', '#ffffffff'))
 	n['theme_text_shadow'].pressed = theme.get_value('text', 'shadow', false)
 	n['theme_text_shadow_color'].color = Color(theme.get_value('text', 'shadow_color', '#9e000000'))
@@ -207,6 +244,7 @@ func load_theme(filename):
 	
 	
 	# Name
+	n['name_font'].text = DialogicResources.get_filename_from_path(theme.get_value('name', 'font', 'res://addons/dialogic/Example Assets/Fonts/NameFont.tres'))
 	n['name_auto_color'].pressed = theme.get_value('name', 'auto_color', true)
 	n['name_background_visible'].pressed = theme.get_value('name', 'background_visible', false)
 	n['name_background'].color = Color(theme.get_value('name', 'background', "#ff000000"))
@@ -216,7 +254,8 @@ func load_theme(filename):
 	n['name_background_modulation'].pressed = theme.get_value('name', 'modulation', false)
 	n['name_background_modulation_color'].color = Color(theme.get_value('name', 'modulation_color', '#ffffffff'))
 
-	
+	n['name_padding_x'].value = theme.get_value('name', 'name_padding', Vector2(10,0)).x
+	n['name_padding_y'].value = theme.get_value('name', 'name_padding', Vector2(10,0)).y
 	
 	n['name_shadow'].color = Color(theme.get_value('name', 'shadow', "#9e000000"))
 	n['name_shadow_visible'].pressed = theme.get_value('name', 'shadow_visible', true)
@@ -264,42 +303,154 @@ func duplicate_theme(from_filename) -> void:
 	load_theme(duplicate_theme)
 	
 
-func _on_BackgroundTextureButton_pressed() -> void:
-	editor_reference.godot_dialog("*.png")
-	editor_reference.godot_dialog_connect(self, "_on_background_selected")
+func _on_visibility_changed() -> void:
+	if visible:
+		# Refreshing the dialog 
+		_on_PreviewButton_pressed()
+		if first_time_loading_theme_full_size_bug == 0:
+			yield(get_tree().create_timer(0.01), "timeout")
+			for i in $VBoxContainer/Panel.get_children():
+				i.resize_main()
+			first_time_loading_theme_full_size_bug += 1
+	else:
+		# Erasing all previews since them keeps working on background
+		for i in $VBoxContainer/Panel.get_children():
+			i.queue_free()
 
+## ------------ 			Preview 		------------------------------------
 
-func _on_background_selected(path, target) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'background','image', path)
-	n['theme_background_image'].text = DialogicResources.get_filename_from_path(path)
+func _on_DelayPreview_timer_timeout() -> void:
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-func _on_NextIndicatorButton_pressed() -> void:
-	editor_reference.godot_dialog("*.png")
-	editor_reference.godot_dialog_connect(self, "_on_indicator_selected")
+func _on_PreviewButton_pressed() -> void:
+	for i in $VBoxContainer/Panel.get_children():
+		i.free()
+	var characters : Array = DialogicUtil.get_character_list()
+	var character_file : String = ''
+	var preview_dialog = Dialogic.start('', true, "res://addons/dialogic/Dialog.tscn", true, false)
+	preview_dialog.preview = true
+	if characters.size():
+		characters.shuffle()
+		character_file = characters[0]['file']
+	preview_dialog.dialog_script = {
+			"events":[
+				{ 'event_id':'dialogic_024', "set_theme": current_theme },
+				{ 'event_id':'dialogic_001', "character": character_file, "portrait":"", "text":n['text_preview'].text }
+			]
+		}
+	preview_dialog.parse_characters(preview_dialog.dialog_script)
+	$VBoxContainer/Panel.add_child(preview_dialog)
+	
+	# maintaining the preview panel big enough for the dialog box
+	var box_size = preview_dialog.current_theme.get_value('box', 'size', Vector2(910, 167)).y
+	var bottom_gap = preview_dialog.current_theme.get_value('box', 'bottom_gap', 40)
+	var extra = 90
+	$VBoxContainer/Panel.rect_min_size.y = box_size + extra + bottom_gap
+	$VBoxContainer/Panel.rect_size.y = 0
+	preview_dialog.call_deferred('resize_main')
 
 
-func _on_indicator_selected(path, target) -> void:
+func _on_Preview_text_changed() -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'next_indicator','image', path)
-	n['theme_next_image'].text = DialogicResources.get_filename_from_path(path)
-	# Since people will probably want the sprite on fresh values and the default
-	# ones are for the custom dialogic theme, I reset the next indicator properties
-	# here so they can set the scale and offset they want.
-	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'scale', 1)
-	DialogicResources.set_theme_value(current_theme, 'offset', 'scale', Vector2(10,10))
-	n['next_indicator_scale'].value = 1
-	n['next_indicator_offset_x'].value = 10
-	n['next_indicator_offset_y'].value = 10
+	DialogicResources.set_theme_value(current_theme, 'text', 'preview', n['text_preview'].text)
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 							THEME OPTIONS
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## ------------ 		DIALOG TEXT TAB 	------------------------------------
+
+# Fonts
+func _on_FontButton_pressed() -> void:
+	editor_reference.godot_dialog("*.tres")
+	editor_reference.godot_dialog_connect(self, "_on_Font_selected")
+
+
+func _on_Font_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'text','font', path)
+	n['theme_font'].text = DialogicResources.get_filename_from_path(path)
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-func _on_NextAnimation_item_selected(index) -> void:
-	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'animation', n['next_animation'].get_item_text(index))
+func _on_FontOpen_pressed():
+	var theme = DialogicResources.get_theme_config(current_theme)
+	editor_reference.editor_interface.inspect_object(load(theme.get_value('text', 'font', 'res://addons/dialogic/Example Assets/Fonts/DefaultFont.tres')))
+
+
+func _on_BoldFontButton_pressed():
+	editor_reference.godot_dialog("*.tres")
+	editor_reference.godot_dialog_connect(self, "_on_BoldFont_selected")
+
+
+func _on_BoldFont_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'text','bold_font', path)
+	n['theme_font_bold'].text = DialogicResources.get_filename_from_path(path)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BoldFontOpen_pressed():
+	var theme = DialogicResources.get_theme_config(current_theme)
+	editor_reference.editor_interface.inspect_object(load(theme.get_value('text', 'bold_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultBoldFont.tres')))
+
+
+func _on_ItalicFontButton_pressed():
+	editor_reference.godot_dialog("*.tres")
+	editor_reference.godot_dialog_connect(self, "_on_ItalicFont_selected")
+
+
+func _on_ItalicFont_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'text', 'italic_font', path)
+	n['theme_font_italic'].text = DialogicResources.get_filename_from_path(path)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_ItalicFontOpen_pressed():
+	var theme = DialogicResources.get_theme_config(current_theme)
+	editor_reference.editor_interface.inspect_object(load(theme.get_value('text', 'italic_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultItalicFont.tres')))
+
+
+func _on_NameFont_pressed():
+	editor_reference.godot_dialog("*.tres")
+	editor_reference.godot_dialog_connect(self, "_on_NameFont_selected")
+
+
+func _on_NameFont_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'font', path)
+	n['name_font'].text = DialogicResources.get_filename_from_path(path)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_NameFontOpen_pressed():
+	var theme = DialogicResources.get_theme_config(current_theme)
+	editor_reference.editor_interface.inspect_object(load(theme.get_value('name', 'font', 'res://addons/dialogic/Example Assets/Fonts/NameFont.tres')))
+
+
+func _on_Alignment_item_selected(index) -> void:
+	if loading:
+		return
+	if index == 0:
+		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Left')
+	elif index == 1:
+		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Center')
+	elif index == 2:
+		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Right')
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_textSpeed_value_changed(value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'text','speed', value)
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
@@ -331,32 +482,123 @@ func _on_ShadowOffset_value_changed(_value) -> void:
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-func _on_PreviewButton_pressed() -> void:
-	for i in $VBoxContainer/Panel.get_children():
-		i.free()
-	var characters : Array = DialogicUtil.get_character_list()
-	var character_file : String = ''
-	var preview_dialog = Dialogic.start('')
-	preview_dialog.preview = true
-	if characters.size():
-		characters.shuffle()
-		character_file = characters[0]['file']
-	preview_dialog.dialog_script = {
-			"events":[
-				{ "set_theme": current_theme },
-				{ "character": character_file, "portrait":"", "text":n['text_preview'].text }
-			]
-		}
-	preview_dialog.parse_characters(preview_dialog.dialog_script)
-	$VBoxContainer/Panel.add_child(preview_dialog)
-	
-	# maintaining the preview panel big enough for the dialog box
-	var box_size = preview_dialog.current_theme.get_value('box', 'size', Vector2(910, 167)).y
-	var bottom_gap = preview_dialog.current_theme.get_value('box', 'bottom_gap', 40)
-	var extra = 90
-	$VBoxContainer/Panel.rect_min_size.y = box_size + extra + bottom_gap
-	$VBoxContainer/Panel.rect_size.y = 0
-	preview_dialog.call_deferred('resize_main')
+## ------------ 		DIALOG BOX TAB	 	------------------------------------
+
+func _on_TextMargin_value_changed(value) -> void:
+	if loading:
+		return
+	var final_vector = Vector2(
+		n['theme_text_margin'].value,
+		n['theme_text_margin_h'].value
+	)
+	DialogicResources.set_theme_value(current_theme, 'text', 'margin', final_vector)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BoxSize_value_changed(value) -> void:
+	if loading:
+		return
+	var size_value = Vector2(n['size_w'].value, n['size_h'].value)
+	DialogicResources.set_theme_value(current_theme, 'box', 'size', size_value)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BottomGap_value_changed(value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'box', 'bottom_gap', value)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+# Background Texture
+func _on_BackgroundTexture_CheckBox_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background', 'use_image', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BackgroundTextureButton_pressed() -> void:
+	editor_reference.godot_dialog("*.png")
+	editor_reference.godot_dialog_connect(self, "_on_background_selected")
+
+
+func _on_background_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background','image', path)
+	n['theme_background_image'].text = DialogicResources.get_filename_from_path(path)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BackgroundTexture_Modulation_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background', 'modulation', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_ColorPicker_Background_texture_modulation_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background', 'modulation_color', '#' + color.to_html())
+	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+# Background Color
+func _on_BackgroundColor_CheckBox_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background', 'use_color', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_BackgroundColor_ColorPickerButton_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'background', 'color', '#' + color.to_html())
+	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+
+# Next indicator
+func _on_NextIndicatorButton_pressed() -> void:
+	editor_reference.godot_dialog("*.png")
+	editor_reference.godot_dialog_connect(self, "_on_indicator_selected")
+
+
+func _on_indicator_selected(path, target) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'next_indicator','image', path)
+	n['theme_next_image'].text = DialogicResources.get_filename_from_path(path)
+	# Since people will probably want the sprite on fresh values and the default
+	# ones are for the custom dialogic theme, I reset the next indicator properties
+	# here so they can set the scale and offset they want.
+	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'scale', 1)
+	DialogicResources.set_theme_value(current_theme, 'offset', 'scale', Vector2(10,10))
+	n['next_indicator_scale'].value = 1
+	n['next_indicator_offset_x'].value = 10
+	n['next_indicator_offset_y'].value = 10
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_NextAnimation_item_selected(index) -> void:
+	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'animation', n['next_animation'].get_item_text(index))
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_IndicatorScale_value_changed(value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'scale', value)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_NextOffset_value_changed(value):
+	if loading:
+		return
+	var offset_value = Vector2(n['next_indicator_offset_x'].value, n['next_indicator_offset_y'].value)
+	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'offset', offset_value)
+	_on_PreviewButton_pressed() # Refreshing the preview
 
 
 func _on_ActionOptionButton_item_selected(index) -> void:
@@ -373,69 +615,117 @@ func _on_ActionOptionButton_pressed() -> void:
 		n['theme_action_key'].add_item(a)
 
 
-func _on_FontButton_pressed() -> void:
-	editor_reference.godot_dialog("*.tres")
-	editor_reference.godot_dialog_connect(self, "_on_Font_selected")
+## ------------ 		NAME LABEL TAB	 	------------------------------------
 
-
-func _on_Font_selected(path, target) -> void:
+# Text Color
+func _on_name_auto_color_toggled(button_pressed) -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'text','font', path)
-	n['theme_font'].text = DialogicResources.get_filename_from_path(path)
+	DialogicResources.set_theme_value(current_theme, 'name', 'auto_color', button_pressed)
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-func _on_textSpeed_value_changed(value) -> void:
+# Background Color
+func _on_name_background_color_changed(color) -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'text','speed', value)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_TextMargin_value_changed(value) -> void:
-	if loading:
-		return
-	var final_vector = Vector2(
-		n['theme_text_margin'].value,
-		n['theme_text_margin_h'].value
-	)
-	DialogicResources.set_theme_value(current_theme, 'text', 'margin', final_vector)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_BackgroundColor_CheckBox_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'background', 'use_color', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_BackgroundColor_ColorPickerButton_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'background', 'color', '#' + color.to_html())
+	DialogicResources.set_theme_value(current_theme, 'name', 'background', '#' + color.to_html())
 	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
 
 
-func _on_BackgroundTexture_CheckBox_toggled(button_pressed) -> void:
+# Background Texture
+func _on_name_background_visible_toggled(button_pressed) -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'background', 'use_image', button_pressed)
+	DialogicResources.set_theme_value(current_theme, 'name', 'background_visible', button_pressed)
 	_on_PreviewButton_pressed() # Refreshing the preview
-	
 
-func _on_button_background_visible_toggled(button_pressed) -> void:
+
+func _on_name_image_visible_toggled(button_pressed) -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'use_background_color', button_pressed)
+	DialogicResources.set_theme_value(current_theme, 'name', 'image_visible', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-func _on_button_background_color_color_changed(color) -> void:
+func _on_name_image_pressed() -> void:
+	editor_reference.godot_dialog("*.png")
+	editor_reference.godot_dialog_connect(self, "_on_name_texture_selected")
+
+
+func _on_name_texture_selected(path, target) -> void:
 	if loading:
 		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'background_color', '#' + color.to_html())
+	DialogicResources.set_theme_value(current_theme, 'name', 'image', path)
+	n['name_image'].text = DialogicResources.get_filename_from_path(path)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_ColorPicker_NameLabel_modulation_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'modulation_color', '#' + color.to_html())
 	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+
+func _on_NameLabel_texture_modulation_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'modulation', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_shadow_visible_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'shadow_visible', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_name_shadow_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'shadow', '#' + color.to_html())
+	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+
+func _on_name_ShadowOffset_value_changed(_value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name','shadow_offset', 
+			Vector2(n['name_shadow_offset_x'].value, n['name_shadow_offset_y'].value))
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_name_padding_value_changed(_value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name','name_padding', 
+			Vector2(n['name_padding_x'].value, n['name_padding_y'].value))
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_name_BottomGap_value_changed(value) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'name', 'bottom_gap', value)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+## ------------ 		CHOICE BUTTON TAB	 	--------------------------------
+
+func _on_FixedSize_toggled(button_pressed):
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'fixed', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_ButtonSize_value_changed(value):
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons','fixed_size', Vector2(n['button_fixed_x'].value,n['button_fixed_y'].value))
+	_on_PreviewButton_pressed() # Refreshing the preview
 
 
 func _on_ButtonOffset_value_changed(value) -> void:
@@ -454,6 +744,7 @@ func _on_VerticalSeparation_value_changed(value) -> void:
 	DialogicResources.set_theme_value(current_theme, 'buttons', 'gap', n['button_separation'].value)
 
 
+# Background Texture
 func _on_button_texture_toggled(button_pressed) -> void:
 	if loading:
 		return
@@ -472,17 +763,46 @@ func _on_button_texture_selected(path, target) -> void:
 	n['button_image'].text = DialogicResources.get_filename_from_path(path)
 
 
+func _on_ChoiceButtons_texture_modulate_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'modulation', button_pressed)
+	_on_PreviewButton_pressed() # Refreshing the preview
+
+
+func _on_ColorPicker_ChoiceButtons_modulation_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'modulation_color', '#' + color.to_html())
+	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+
+# Background Color
+func _on_button_background_visible_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'use_background_color', button_pressed)
+
+
+func _on_button_background_color_color_changed(color) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'background_color', '#' + color.to_html())
+	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
+
+
+# Text Color
+func _on_Custom_Button_Color_toggled(button_pressed) -> void:
+	if loading:
+		return
+	DialogicResources.set_theme_value(current_theme, 'buttons', 'text_color_enabled', button_pressed)
+
+
 func _on_ButtonTextColor_color_changed(color) -> void:
 	if loading:
 		return
 	DialogicResources.set_theme_value(current_theme, 'buttons', 'text_color', '#' + color.to_html())
 	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-func _on_Custom_Button_Color_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'text_color_enabled', button_pressed)
 
 
 func _on_native_button_toggled(button_pressed) -> void:
@@ -520,6 +840,7 @@ func _on_CustomButtonsButton_pressed():
 	editor_reference.godot_dialog("*.tscn")
 	editor_reference.godot_dialog_connect(self, "_on_custom_button_selected")
 
+
 func _on_custom_button_selected(path, target) -> void:
 	if loading:
 		return
@@ -527,6 +848,7 @@ func _on_custom_button_selected(path, target) -> void:
 	n['button_custom_path'].text = DialogicResources.get_filename_from_path(path)
 
 
+## ------------ 		GLOSSARY  TAB	 	------------------------------------
 func _on_GlossaryColorPicker_color_changed(color) -> void:
 	if loading:
 		return
@@ -554,193 +876,8 @@ func _on_ShowGlossaryCheckBox_toggled(button_pressed):
 	_on_PreviewButton_pressed() # Refreshing the preview
 
 
-
-func _on_visibility_changed() -> void:
-	if visible:
-		# Refreshing the dialog 
-		_on_PreviewButton_pressed()
-	else:
-		# Erasing all previews since them keeps working
-		# on background
-		for i in $VBoxContainer/Panel.get_children():
-			i.queue_free()
-
-
-func _on_BoxSize_value_changed(value) -> void:
+func _on_BackgroundFullWidth_toggled(button_pressed):
 	if loading:
 		return
-	var size_value = Vector2(n['size_w'].value, n['size_h'].value)
-	DialogicResources.set_theme_value(current_theme, 'box', 'size', size_value)
+	DialogicResources.set_theme_value(current_theme, 'background','full_width', button_pressed)
 	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_BottomGap_value_changed(value) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'box', 'bottom_gap', value)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_Alignment_item_selected(index) -> void:
-	if loading:
-		return
-	if index == 0:
-		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Left')
-	elif index == 1:
-		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Center')
-	elif index == 2:
-		DialogicResources.set_theme_value(current_theme, 'text', 'alignment', 'Right')
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_Preview_text_changed() -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'text', 'preview', n['text_preview'].text)
-
-
-func _on_name_auto_color_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'auto_color', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_name_background_visible_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'background_visible', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_name_background_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'background', '#' + color.to_html())
-	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-func _on_name_image_visible_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'image_visible', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_name_image_pressed() -> void:
-	editor_reference.godot_dialog("*.png")
-	editor_reference.godot_dialog_connect(self, "_on_name_texture_selected")
-
-
-func _on_name_texture_selected(path, target) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'image', path)
-	n['name_image'].text = DialogicResources.get_filename_from_path(path)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_shadow_visible_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'shadow_visible', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_name_shadow_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'shadow', '#' + color.to_html())
-	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-func _on_name_ShadowOffset_value_changed(_value) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name','shadow_offset', 
-			Vector2(n['name_shadow_offset_x'].value,n['name_shadow_offset_y'].value))
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_name_BottomGap_value_changed(value) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'bottom_gap', value)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_DelayPreview_timer_timeout() -> void:
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_BackgroundTexture_Modulation_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'background', 'modulation', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_ColorPicker_Background_texture_modulation_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'background', 'modulation_color', '#' + color.to_html())
-	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-func _on_ColorPicker_NameLabel_modulation_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'modulation_color', '#' + color.to_html())
-	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-func _on_NameLabel_texture_modulation_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'name', 'modulation', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_ChoiceButtons_texture_modulate_toggled(button_pressed) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'modulation', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_ColorPicker_ChoiceButtons_modulation_color_changed(color) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'modulation_color', '#' + color.to_html())
-	$DelayPreviewTimer.start(0.5) # Calling a timer so the update doesn't get triggered many times
-
-
-
-func _on_IndicatorScale_value_changed(value) -> void:
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'scale', value)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_NextOffset_value_changed(value):
-	if loading:
-		return
-	var offset_value = Vector2(n['next_indicator_offset_x'].value, n['next_indicator_offset_y'].value)
-	DialogicResources.set_theme_value(current_theme, 'next_indicator', 'offset', offset_value)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_FixedSize_toggled(button_pressed):
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'buttons', 'fixed', button_pressed)
-	_on_PreviewButton_pressed() # Refreshing the preview
-
-
-func _on_ButtonSize_value_changed(value):
-	if loading:
-		return
-	DialogicResources.set_theme_value(current_theme, 'buttons','fixed_size', Vector2(n['button_fixed_x'].value,n['button_fixed_y'].value))
-	_on_PreviewButton_pressed() # Refreshing the preview
-

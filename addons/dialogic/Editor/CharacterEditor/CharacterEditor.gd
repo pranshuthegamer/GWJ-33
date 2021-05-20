@@ -15,8 +15,12 @@ onready var nodes = {
 	'default_speaker': $HBoxContainer/Container/Actions/DefaultSpeaker,
 	'display_name_checkbox': $HBoxContainer/Container/Name/CheckBox,
 	'display_name': $HBoxContainer/Container/DisplayName/LineEdit,
+	'nickname_checkbox': $HBoxContainer/Container/Name/CheckBox2,
+	'nickname': $HBoxContainer/Container/DisplayNickname/LineEdit,
 	'new_portrait_button': $HBoxContainer/Container/ScrollContainer/VBoxContainer/HBoxContainer/Button,
+	'import_from_folder_button': $HBoxContainer/Container/ScrollContainer/VBoxContainer/HBoxContainer/ImportFromFolder,
 	'portrait_preview': $HBoxContainer/VBoxContainer/Control/TextureRect,
+	'image_label': $"HBoxContainer/VBoxContainer/Control/Label",
 	'scale': $HBoxContainer/VBoxContainer/HBoxContainer/Scale,
 	'offset_x': $HBoxContainer/VBoxContainer/HBoxContainer/OffsetX,
 	'offset_y': $HBoxContainer/VBoxContainer/HBoxContainer/OffsetY,
@@ -25,18 +29,27 @@ onready var nodes = {
 
 func _ready():
 	nodes['new_portrait_button'].connect('pressed', self, '_on_New_Portrait_Button_pressed')
+	nodes['import_from_folder_button'].connect('pressed', self, '_on_Import_Portrait_Folder_Button_pressed')
 	nodes['display_name_checkbox'].connect('toggled', self, '_on_display_name_toggled')
+	nodes['nickname_checkbox'].connect('toggled', self, '_on_nickname_toggled')
 	nodes['name'].connect('text_changed', self, '_on_name_changed')
 	nodes['color'].connect('color_changed', self, '_on_color_changed')
 	var style = get('custom_styles/bg')
 	style.set('bg_color', get_color("base_color", "Editor"))
+	nodes['new_portrait_button'].icon = get_icon("Add", "EditorIcons")
+	nodes['import_from_folder_button'].icon = get_icon("Folder", "EditorIcons")
 
 
 func is_selected(file: String):
 	return nodes['file'].text == file
 
+
 func _on_display_name_toggled(button_pressed):
 	$HBoxContainer/Container/DisplayName.visible = button_pressed
+
+
+func _on_nickname_toggled(button_pressed):
+	$HBoxContainer/Container/DisplayNickname.visible = button_pressed
 
 
 func _on_name_changed(value):
@@ -59,7 +72,9 @@ func clear_character_editor():
 	nodes['mirror_portraits_checkbox'].pressed = false
 	nodes['default_speaker'].pressed = false
 	nodes['display_name_checkbox'].pressed = false
+	nodes['nickname_checkbox'].pressed = false
 	nodes['display_name'].text = ''
+	nodes['nickname'].text = ''
 	nodes['portraits'] = []
 	nodes['scale'].value = 100
 	nodes['offset_x'].value = 0
@@ -109,6 +124,8 @@ func generate_character_data_to_save():
 		'portraits': portraits,
 		'display_name_bool': nodes['display_name_checkbox'].pressed,
 		'display_name': nodes['display_name'].text,
+		'nickname_bool': nodes['nickname_checkbox'].pressed,
+		'nickname': nodes['nickname'].text,
 		'scale': nodes['scale'].value,
 		'offset_x': nodes['offset_x'].value,
 		'offset_y': nodes['offset_y'].value,
@@ -151,6 +168,11 @@ func load_character(filename: String):
 	if data.has('scale'):
 		nodes['scale'].value = float(data['scale'])
 	
+	if data.has('nickname_bool'):
+		nodes['nickname_checkbox'].pressed = data['nickname_bool']
+	if data.has('nickname'):
+		nodes['nickname'].text = data['nickname']
+	
 	if data.has('offset_x'):
 		nodes['offset_x'].value = data['offset_x']
 		nodes['offset_y'].value = data['offset_y']
@@ -184,6 +206,7 @@ func create_portrait_entry(p_name = '', path = '', grab_focus = false):
 	var p = portrait_entry.instance()
 	p.editor_reference = editor_reference
 	p.image_node = nodes['portrait_preview']
+	p.image_label = nodes['image_label']
 	var p_list = $HBoxContainer/Container/ScrollContainer/VBoxContainer/PortraitList
 	p_list.add_child(p)
 	if p_name != '':
@@ -194,6 +217,28 @@ func create_portrait_entry(p_name = '', path = '', grab_focus = false):
 		p.get_node("NameEdit").grab_focus()
 		p._on_ButtonSelect_pressed()
 	return p
+
+
+func _on_Import_Portrait_Folder_Button_pressed():
+	editor_reference.godot_dialog("*", EditorFileDialog.MODE_OPEN_DIR)
+	editor_reference.godot_dialog_connect(self, "_on_dir_selected", "dir_selected")
+
+
+func _on_dir_selected(path, target):
+	var dir = Directory.new()
+	if dir.open(path) == OK:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if not dir.current_is_dir():
+				var file_lower = file_name.to_lower()
+				if '.svg' in file_lower or '.png' in file_lower:
+					if not '.import' in file_lower:
+						var final_name = path+ "/" + file_name
+						create_portrait_entry(DialogicResources.get_filename_from_path(file_name), final_name)
+			file_name = dir.get_next()
+	else:
+		print("An error occurred when trying to access the path.")
 
 
 func _on_MirrorPortraitsCheckBox_toggled(button_pressed):

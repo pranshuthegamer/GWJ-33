@@ -51,8 +51,10 @@ func _ready():
 		dialog_script = set_current_dialog(timeline)
 	elif dialog_script.keys().size() == 0:
 		dialog_script = {
-			"events":[{"character":"","portrait":"",
-			"text":"[Dialogic Error] No timeline specified."}]
+			"events":[
+				{'event_id':'dialogic_001',
+				"character":"","portrait":"",
+				"text":"[Dialogic Error] No timeline specified."}]
 		}
 	
 	# Connecting resize signal
@@ -70,8 +72,13 @@ func _ready():
 
 	if Engine.is_editor_hint():
 		if preview:
+			get_parent().connect("resized", self, "resize_main")
 			_init_dialog()
 	else:
+		# Copied
+		if not(get_parent() is CanvasLayer) and debug_mode:
+			push_warning("[Dialogic] You didn't add this node to a CanvasLayer. If this was intentional, you can ignore this warning.")
+		
 		_init_dialog()
 
 
@@ -104,6 +111,20 @@ func resize_main():
 	if current_theme != null:
 		$TextBubble.rect_position.y = (reference.y) - ($TextBubble.rect_size.y) - current_theme.get_value('box', 'bottom_gap', 40)
 	
+	
+	var pos_x = 0
+	if current_theme.get_value('background', 'full_width', false):
+		if preview:
+			pos_x = get_parent().rect_global_position.x
+		$TextBubble/TextureRect.rect_global_position.x = pos_x
+		$TextBubble/ColorRect.rect_global_position.x = pos_x
+		$TextBubble/TextureRect.rect_size.x = reference.x
+		$TextBubble/ColorRect.rect_size.x = reference.x
+	else:
+		$TextBubble/TextureRect.rect_global_position.x = $TextBubble.rect_global_position.x
+		$TextBubble/ColorRect.rect_global_position.x = $TextBubble.rect_global_position.x
+		$TextBubble/TextureRect.rect_size.x = $TextBubble.rect_size.x
+		$TextBubble/ColorRect.rect_size.x = $TextBubble.rect_size.x
 	
 	var background = get_node_or_null('Background')
 	if background != null:
@@ -140,10 +161,19 @@ func parse_characters(dialog_script):
 		for t in dialog_script['events']:
 			if t.has('text'):
 				for n in names:
+					var name_end_check = [' ', ',', '.', '?', '!', "'"]
 					if n.has('name'):
-						dialog_script['events'][index]['text'] = t['text'].replace(n['name'],
-							'[color=#' + n['color'].to_html() + ']' + n['name'] + '[/color]'
-						)
+						for c in name_end_check:
+							dialog_script['events'][index]['text'] = t['text'].replace(n['name'] + c,
+								'[color=#' + n['color'].to_html() + ']' + n['name'] + '[/color]' + c
+							)
+						if n.has('nickname') and n['nickname'] != '':
+							var nicknames_array = n['nickname'].split(",", true, 0)
+							for c in name_end_check:
+								for nn in nicknames_array:
+									dialog_script['events'][index]['text'] = t['text'].replace(nn + c,
+										'[color=#' + n['color'].to_html() + ']' + nn + '[/color]' + c
+									)
 			index += 1
 	return dialog_script
 
@@ -174,6 +204,7 @@ func parse_text_lines(unparsed_dialog_script: Dictionary) -> Dictionary:
 				for line in lines:
 					if not line.empty():
 						new_events.append({
+							'event_id':'dialogic_001',
 							'text': line,
 							'character': event['character'],
 							'portrait': event['portrait']
@@ -206,56 +237,56 @@ func parse_branches(dialog_script: Dictionary) -> Dictionary:
 		return dialog_script
 
 	var parser_queue = [] # This saves the last question opened, and it gets removed once it was consumed by a endbranch event
-	var event_id: int = 0 # The current id for jumping later on
-	var question_id: int = 0 # identifying the questions to assign options to it
+	var event_idx: int = 0 # The current id for jumping later on
+	var question_idx: int = 0 # identifying the questions to assign options to it
 	for event in dialog_script['events']:
-		if event.has('choice'):
+		if event['event_id'] == 'dialogic_011':
 			var opened_branch = parser_queue.back()
 			var option = {
-				'question_id': opened_branch['question_id'],
-				'label': event['choice'],
-				'event_id': event_id,
+				'question_idx': opened_branch['question_idx'],
+				'label': parse_definitions(event['choice'], true, false),
+				'event_idx': event_idx,
 				}
 			if event.has('condition') and event.has('definition') and event.has('value'):
 				option = {
-					'question_id': opened_branch['question_id'],
-					'label': event['choice'],
-					'event_id': event_id,
+					'question_idx': opened_branch['question_idx'],
+					'label': parse_definitions(event['choice'], true, false),
+					'event_idx': event_idx,
 					'condition': event['condition'],
 					'definition': event['definition'],
 					'value': event['value'],
 					}
 			else:
 				option = {
-					'question_id': opened_branch['question_id'],
-					'label': event['choice'],
-					'event_id': event_id,
+					'question_idx': opened_branch['question_idx'],
+					'label': parse_definitions(event['choice'], true, false),
+					'event_idx': event_idx,
 					'condition': '',
 					'definition': '',
 					'value': '',
 					}
-			dialog_script['events'][opened_branch['event_id']]['options'].append(option)
-			event['question_id'] = opened_branch['question_id']
-		elif event.has('question'):
-			event['event_id'] = event_id
-			event['question_id'] = question_id
+			dialog_script['events'][opened_branch['event_idx']]['options'].append(option)
+			event['question_idx'] = opened_branch['question_idx']
+		elif event['event_id'] == 'dialogic_010':
+			event['event_idx'] = event_idx
+			event['question_idx'] = question_idx
 			event['answered'] = false
-			question_id += 1
+			question_idx += 1
 			questions.append(event)
 			parser_queue.append(event)
-		elif event.has('condition'):
-			event['event_id'] = event_id
-			event['question_id'] = question_id
+		elif event['event_id'] == 'dialogic_012':
+			event['event_idx'] = event_idx
+			event['question_idx'] = question_idx
 			event['answered'] = false
-			question_id += 1
+			question_idx += 1
 			questions.append(event)
 			parser_queue.append(event)
-		elif event.has('endbranch'):
-			event['event_id'] = event_id
+		elif event['event_id'] == 'dialogic_013':
+			event['event_idx'] = event_idx
 			var opened_branch = parser_queue.pop_back()
-			event['end_branch_of'] = opened_branch['question_id']
-			dialog_script['events'][opened_branch['event_id']]['end_id'] = event_id
-		event_id += 1
+			event['end_branch_of'] = opened_branch['question_idx']
+			dialog_script['events'][opened_branch['event_idx']]['end_idx'] = event_idx
+		event_idx += 1
 
 	return dialog_script
 
@@ -268,6 +299,8 @@ func _should_show_glossary():
 
 func parse_definitions(text: String, variables: bool = true, glossary: bool = true):
 	var final_text: String = text
+	if not preview:
+		definitions = DialogicSingleton.get_definitions()
 	if variables:
 		final_text = _insert_variable_definitions(text)
 	if glossary and _should_show_glossary():
@@ -337,13 +370,21 @@ func update_name(character) -> void:
 
 
 func update_text(text: String) -> String:
+	if settings.has_section_key('dialog', 'translations') and settings.get_value('dialog', 'translations'):
+		text = tr(text)
 	var final_text = parse_definitions(parse_alignment(text))
 	final_text = final_text.replace('[br]', '\n')
+
 	$TextBubble.update_text(final_text)
 	return final_text
 
 
 func _on_text_completed():
+	if current_event.has('text'):
+		if '[p]' in current_event['text']:
+			yield(get_tree().create_timer(2), "timeout")
+		if '[nw]' in current_event['text']:
+			_load_next_event()
 	finished = true
 	if current_event.has('options'):
 		for o in current_event['options']:
@@ -352,8 +393,10 @@ func _on_text_completed():
 
 func on_timeline_start():
 	if not Engine.is_editor_hint():
-		DialogicSingleton.save_definitions()
-		DialogicSingleton.set_current_timeline(current_timeline)
+		if settings.get_value('saving', 'save_definitions_on_start', true):
+			DialogicSingleton.save_definitions()
+		if settings.get_value('saving', 'save_current_timeline', true):
+			DialogicSingleton.set_current_timeline(current_timeline)
 	# TODO remove event_start in 2.0
 	emit_signal("event_start", "timeline", current_timeline)
 	emit_signal("timeline_start", current_timeline)
@@ -361,8 +404,10 @@ func on_timeline_start():
 
 func on_timeline_end():
 	if not Engine.is_editor_hint():
-		DialogicSingleton.save_definitions()
-		DialogicSingleton.set_current_timeline('')
+		if settings.get_value('saving', 'save_definitions_on_end', true):
+			DialogicSingleton.save_definitions()
+		if settings.get_value('saving', 'clear_current_timeline', true):
+			DialogicSingleton.set_current_timeline('')
 	# TODO remove event_end in 2.0
 	emit_signal("event_end", "timeline")
 	emit_signal("timeline_end", current_timeline)
@@ -433,8 +478,10 @@ func event_handler(event: Dictionary):
 	
 	dprint('[D] Current Event: ', event)
 	current_event = event
-	match event:
-		{'text', 'character', 'portrait'}:
+	match event['event_id']:
+		# MAIN EVENTS
+		# Text Event
+		'dialogic_001':
 			emit_signal("event_start", "text", event)
 			show_dialog()
 			finished = false
@@ -442,7 +489,49 @@ func event_handler(event: Dictionary):
 			update_name(character_data)
 			grab_portrait_focus(character_data, event)
 			update_text(event['text'])
-		{'question', 'question_id', 'options', ..}:
+		# Join event
+		'dialogic_002':
+			## PLEASE UPDATE THIS! BUT HOW? 
+			emit_signal("event_start", "action", event)
+			if event['character'] == '':
+				_load_next_event()
+			else:
+				var character_data = get_character(event['character'])
+				var exists = grab_portrait_focus(character_data)
+				if exists == false:
+					var p = Portrait.instance()
+					var char_portrait = event['portrait']
+					if char_portrait == '':
+						char_portrait = 'Default'
+					
+					if char_portrait == '[Definition]' and event.has('port_defn'):
+						var portrait_definition = event['port_defn']
+						if portrait_definition != '':
+							for d in DialogicResources.get_default_definitions()['variables']:
+								if d['id'] == portrait_definition:
+									char_portrait = d['value']
+									break
+					
+					p.character_data = character_data
+					p.init(char_portrait, get_character_position(event['position']), event.get('mirror', false))
+					$Portraits.add_child(p)
+					p.fade_in()
+			_load_next_event()
+		# Character Leave event 
+		'dialogic_003':
+			## PLEASE UPDATE THIS! BUT HOW? 
+			emit_signal("event_start", "action", event)
+			if event['character'] == '[All]':
+				characters_leave_all()
+			else:
+				for p in $Portraits.get_children():
+					if p.character_data['file'] == event['character']:
+						p.fade_out()
+			_load_next_event()
+		
+		# LOGIC EVENTS
+		# Question event
+		'dialogic_010':
 			emit_signal("event_start", "question", event)
 			show_dialog()
 			finished = false
@@ -454,42 +543,53 @@ func event_handler(event: Dictionary):
 				update_name(character_data)
 				grab_portrait_focus(character_data, event)
 			update_text(event['question'])
-		{'choice', 'question_id'}:
+		# Choice event
+		'dialogic_011':
 			emit_signal("event_start", "choice", event)
 			for q in questions:
-				if q['question_id'] == event['question_id']:
+				if q['question_idx'] == event['question_idx']:
 					if q['answered']:
 						# If the option is for an answered question, skip to the end of it.
-						_load_event_at_index(q['end_id'])
-		{'action', ..}:
-			emit_signal("event_start", "action", event)
-			if event['action'] == 'leaveall':
-				if event['character'] == '[All]':
-					characters_leave_all()
-				else:
-					for p in $Portraits.get_children():
-						if p.character_data['file'] == event['character']:
-							p.fade_out()
+						_load_event_at_index(q['end_idx'])
+		# Condition event
+		'dialogic_012':
+			# Treating this conditional as an option on a regular question event
+			var def_value = null
+			var current_question = questions[event['question_idx']]
+			
+			for d in definitions['variables']:
+				if d['id'] == event['definition']:
+					def_value = d['value']
+			
+			var condition_met = def_value != null and _compare_definitions(def_value, event['value'], event['condition']);
+			
+			current_question['answered'] = !condition_met
+			if !condition_met:
+				# condition not met, skipping branch
+				_load_event_at_index(current_question['end_idx'])
+			else:
+				# condition met, entering branch
 				_load_next_event()
-			elif event['action'] == 'join':
-				if event['character'] == '':
-					_load_next_event()
-				else:
-					var character_data = get_character(event['character'])
-					var exists = grab_portrait_focus(character_data)
-					if exists == false:
-						var p = Portrait.instance()
-						var char_portrait = event['portrait']
-						if char_portrait == '':
-							char_portrait = 'Default'
-						p.character_data = character_data
-						p.init(char_portrait, get_character_position(event['position']), event.get('mirror', false))
-						$Portraits.add_child(p)
-						p.fade_in()
-				_load_next_event()
-		{'scene'}:
-			get_tree().change_scene(event['scene'])
-		{'background'}:
+		# End Branch event
+		'dialogic_013':
+			emit_signal("event_start", "endbranch", event)
+			_load_next_event()
+		# Set Value event
+		'dialogic_014':
+			emit_signal("event_start", "set_value", event)
+			var operation = '='
+			if 'operation' in event and not event['operation'].empty():
+				operation = event["operation"]
+			DialogicSingleton.set_variable_from_id(event['definition'], event['set_value'], operation)
+			_load_next_event()
+		
+		# TIMELINE EVENTS
+		# Change Timeline event
+		'dialogic_020':
+			dialog_script = set_current_dialog(event['change_timeline'])
+			_init_dialog()
+		# Change Backround event
+		'dialogic_021':
 			emit_signal("event_start", "background", event)
 			var background = get_node_or_null('Background')
 			if event['background'] == '' and background != null:
@@ -520,7 +620,35 @@ func event_handler(event: Dictionary):
 				elif (event['background'] != ''):
 					background.texture = load(event['background'])
 			_load_next_event()
-		{'audio'}, {'audio', 'file', ..}:
+		# Close Dialog event
+		'dialogic_022':
+			emit_signal("event_start", "close_dialog", event)
+			var transition_duration = 1.0
+			if event.has('transition_duration'):
+				transition_duration = event['transition_duration']
+			close_dialog_event(transition_duration)
+		# Wait seconds event
+		'dialogic_023':
+			emit_signal("event_start", "wait", event)
+			wait_seconds(event['wait_seconds'])
+			waiting = true
+		# Set Theme event
+		'dialogic_024':
+			emit_signal("event_start", "set_theme", event)
+			if event['set_theme'] != '':
+				current_theme = load_theme(event['set_theme'])
+			_load_next_event()
+		
+		# Set Glossary event
+		'dialogic_025':
+			emit_signal("event_start", "set_glossary", event)
+			if event['glossary_id']:
+				print("set glossary")
+				DialogicSingleton.set_glossary_from_id(event['glossary_id'], event['title'], event['text'],event['extra'])
+			_load_next_event()
+		# AUDIO EVENTS
+		# Audio event
+		'dialogic_030':
 			emit_signal("event_start", "audio", event)
 			if event['audio'] == 'play' and 'file' in event.keys() and not event['file'].empty():
 				var audio = get_node_or_null('AudioEvent')
@@ -541,66 +669,29 @@ func event_handler(event: Dictionary):
 					audio.stop()
 					audio.queue_free()
 			_load_next_event()
-		{'background-music'}, {'background-music', 'file',..}:
+		# Background Music event
+		'dialogic_031':
 			emit_signal("event_start", "background-music", event)
 			if event['background-music'] == 'play' and 'file' in event.keys() and not event['file'].empty():
 				$FX/BackgroundMusic.crossfade_to(event['file'], event.get('audio_bus', 'Master'), event.get('volume', 0), event.get('fade_length', 1))
 			else:
 				$FX/BackgroundMusic.fade_out(event.get('fade_length', 1))
 			_load_next_event()
-		{'endbranch', ..}:
-			emit_signal("event_start", "endbranch", event)
-			_load_next_event()
-		{'change_scene'}:
-			get_tree().change_scene(event['change_scene'])
-		{'emit_signal', ..}:
+		
+		# GODOT EVENTS
+		# Emit signal event
+		'dialogic_040':
 			dprint('[!] Emitting signal: dialogic_signal(', event['emit_signal'], ')')
 			emit_signal("dialogic_signal", event['emit_signal'])
 			_load_next_event()
-		{'close_dialog', ..}:
-			emit_signal("event_start", "close_dialog", event)
-			var transition_duration = 1.0
-			if event.has('transition_duration'):
-				transition_duration = event['transition_duration']
-			close_dialog_event(transition_duration)
-		{'set_theme'}:
-			emit_signal("event_start", "set_theme", event)
-			if event['set_theme'] != '':
-				current_theme = load_theme(event['set_theme'])
-			_load_next_event()
-		{'wait_seconds'}:
-			emit_signal("event_start", "wait", event)
-			wait_seconds(event['wait_seconds'])
-			waiting = true
-		{'change_timeline'}:
-			dialog_script = set_current_dialog(event['change_timeline'])
-			_init_dialog()
-		{'condition', 'definition', 'value', 'question_id', ..}:
-			# Treating this conditional as an option on a regular question event
-			var def_value = null
-			var current_question = questions[event['question_id']]
-			
-			for d in definitions['variables']:
-				if d['id'] == event['definition']:
-					def_value = d['value']
-			
-			var condition_met = def_value != null and _compare_definitions(def_value, event['value'], event['condition']);
-			
-			current_question['answered'] = !condition_met
-			if !condition_met:
-				# condition not met, skipping branch
-				_load_event_at_index(current_question['end_id'])
-			else:
-				# condition met, entering branch
-				_load_next_event()
-		{'set_value', 'definition', ..}:
-			emit_signal("event_start", "set_value", event)
-			var operation = '='
-			if 'operation' in event and not event['operation'].empty():
-				operation = event["operation"]
-			DialogicSingleton.set_variable_from_id(event['definition'], event['set_value'], operation)
-			_load_next_event()
-		{'call_node', ..}:
+		# Change Scene event
+		'dialogic_041':
+			if event.has('scene'):
+				get_tree().change_scene(event['scene'])
+			elif event.has('change_scene'):
+				get_tree().change_scene(event['change_scene'])
+		# Call Node event
+		'dialogic_042':
 			dprint('[!] Call Node signal: dialogic_signal(call_node) ', var2str(event['call_node']))
 			emit_signal("event_start", "call_node", event)
 			$TextBubble.visible = false
@@ -639,7 +730,7 @@ func reset_options():
 
 
 func _should_add_choice_button(option: Dictionary):
-	if not option['condition'].empty() and not option['definition'].empty() and not option['value'].empty():
+	if not option['definition'].empty():
 		var def_value = null
 		for d in definitions['variables']:
 			if d['id'] == option['definition']:
@@ -670,6 +761,9 @@ func get_classic_choice_button(label: String):
 	var theme = current_theme
 	var button : Button = ChoiceButton.instance()
 	button.text = label
+	
+	# Removing the blue selected border
+	button.set('custom_styles/focus', StyleBoxEmpty.new())
 	# Text
 	button.set('custom_fonts/font', DialogicUtil.path_fixer_load(theme.get_value('text', 'font', "res://addons/dialogic/Example Assets/Fonts/DefaultFont.tres")))
 
@@ -724,12 +818,11 @@ func add_choice_button(option: Dictionary):
 		return
 	
 	var button
-	print(use_custom_choice_button())
 	if use_custom_choice_button():
 		button = get_custom_choice_button(option['label'])
 	else:
 		button = get_classic_choice_button(option['label'])
-	button.connect("pressed", self, "answer_question", [button, option['event_id'], option['question_id']])
+	button.connect("pressed", self, "answer_question", [button, option['event_idx'], option['question_idx']])
 
 	if use_native_choice_button() or use_custom_choice_button():
 		$Options.set('custom_constants/separation', current_theme.get_value('buttons', 'gap', 20))
@@ -740,12 +833,12 @@ func add_choice_button(option: Dictionary):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE) # Make sure the cursor is visible for the options selection
 
 
-func answer_question(i, event_id, question_id):
-	dprint('[!] Going to ', event_id + 1, i, 'question_id:', question_id)
+func answer_question(i, event_idx, question_idx):
+	dprint('[!] Going to ', event_idx + 1, i, 'question_idx:', question_idx)
 	waiting_for_answer = false
-	questions[question_id]['answered'] = true
+	questions[question_idx]['answered'] = true
 	reset_options()
-	_load_event_at_index(event_id + 1)
+	_load_event_at_index(event_idx + 1)
 	if last_mouse_mode != null:
 		Input.set_mouse_mode(last_mouse_mode) # Revert to last mouse mode when selection is done
 		last_mouse_mode = null
@@ -826,7 +919,7 @@ func _on_RichTextLabel_meta_hover_started(meta):
 		if d['id'] == meta:
 			$DefinitionInfo.load_preview({
 				'title': d['title'],
-				'body': d['text'],
+				'body': parse_definitions(d['text'], true, false), # inserts variables but not other glossary items!
 				'extra': d['extra'],
 				'color': current_theme.get_value('definitions', 'color', '#ffbebebe'),
 			})
@@ -888,6 +981,8 @@ func _compare_definitions(def_value: String, event_value: String, condition: Str
 		if def_value.is_valid_float() and event_value.is_valid_float():
 			converted_def_value = float(def_value)
 			converted_event_value = float(event_value)
+		if condition == '':
+			condition = '==' # The default condition is Equal to
 		match condition:
 			"==":
 				condition_met = converted_def_value == converted_event_value
@@ -901,6 +996,7 @@ func _compare_definitions(def_value: String, event_value: String, condition: Str
 				condition_met = converted_def_value < converted_event_value
 			"<=":
 				condition_met = converted_def_value <= converted_event_value
+	#print('comparing definition: ', def_value, ',', event_value, ',', condition, ' - ', condition_met)
 	return condition_met
 
 
