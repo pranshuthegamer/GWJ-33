@@ -33,10 +33,15 @@ func update_name(name: String, color: Color = Color.white, autocolor: bool=false
 
 
 func update_text(text):
+	# Removing commands from the text
+	text = text.replace('[p]', '')
+	text = text.replace('[nw]', '')
+	
 	# Updating the text and starting the animation from 0
 	text_label.bbcode_text = text
 	text_label.percent_visible = 0
 
+	
 	# The call to this function needs to be deferred.
 	# More info: https://github.com/godotengine/godot/issues/36381
 	call_deferred("_start_text_tween")
@@ -61,8 +66,11 @@ func load_theme(theme: ConfigFile):
 	# Text
 	var theme_font = DialogicUtil.path_fixer_load(theme.get_value('text', 'font', 'res://addons/dialogic/Example Assets/Fonts/DefaultFont.tres'))
 	text_label.set('custom_fonts/normal_font', theme_font)
-	name_label.set('custom_fonts/font', theme_font)
-
+	text_label.set('custom_fonts/bold_font', DialogicUtil.path_fixer_load(theme.get_value('text', 'bold_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultBoldFont.tres')))
+	text_label.set('custom_fonts/italics_font', DialogicUtil.path_fixer_load(theme.get_value('text', 'italic_font', 'res://addons/dialogic/Example Assets/Fonts/DefaultItalicFont.tres')))
+	name_label.set('custom_fonts/font', DialogicUtil.path_fixer_load(theme.get_value('name', 'font', 'res://addons/dialogic/Example Assets/Fonts/NameFont.tres')))
+	
+	
 	var text_color = Color(theme.get_value('text', 'color', '#ffffffff'))
 	text_label.set('custom_colors/default_color', text_color)
 	name_label.set('custom_colors/font_color', text_color)
@@ -93,7 +101,7 @@ func load_theme(theme: ConfigFile):
 	$TextureRect.texture = DialogicUtil.path_fixer_load(theme.get_value('background','image', "res://addons/dialogic/Example Assets/backgrounds/background-2.png"))
 	$ColorRect.color = Color(theme.get_value('background','color', "#ff000000"))
 
-	if theme.get_value('background', 'modulation', false) == true:
+	if theme.get_value('background', 'modulation', false):
 		$TextureRect.modulate = Color(theme.get_value('background', 'modulation_color', '#ffffffff'))
 	else:
 		$TextureRect.modulate = Color('#ffffffff')
@@ -122,12 +130,19 @@ func load_theme(theme: ConfigFile):
 	$NameLabel/ColorRect.color = Color(theme.get_value('name', 'background', '#282828'))
 	$NameLabel/TextureRect.visible = theme.get_value('name', 'image_visible', false)
 	$NameLabel/TextureRect.texture = DialogicUtil.path_fixer_load(theme.get_value('name','image', "res://addons/dialogic/Example Assets/backgrounds/background-2.png"))
+	
+	var name_padding = theme.get_value('name', 'name_padding', Vector2( 10, 0 ))
+	var name_style = name_label.get('custom_styles/normal')
+	name_style.set('content_margin_left', name_padding.x)
+	name_style.set('content_margin_right', name_padding.x)
+	name_style.set('content_margin_bottom', name_padding.y)
+	
 	var name_shadow_offset = theme.get_value('name', 'shadow_offset', Vector2(2,2))
 	if theme.get_value('name', 'shadow_visible', true):
 		name_label.set('custom_colors/font_color_shadow', Color(theme.get_value('name', 'shadow', '#9e000000')))
 		name_label.set('custom_constants/shadow_offset_x', name_shadow_offset.x)
 		name_label.set('custom_constants/shadow_offset_y', name_shadow_offset.y)
-	name_label.rect_position.y = theme.get_value('name', 'bottom_gap', 48) * -1
+	name_label.rect_position.y = theme.get_value('name', 'bottom_gap', 48) * -1 - (name_padding.y)
 	if theme.get_value('name', 'modulation', false) == true:
 		$NameLabel/TextureRect.modulate = Color(theme.get_value('name', 'modulation_color', '#ffffffff'))
 	else:

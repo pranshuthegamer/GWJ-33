@@ -13,6 +13,8 @@ onready var definition_editor = $MainPanel/DefinitionEditor
 onready var theme_editor = $MainPanel/ThemeEditor
 onready var settings_editor = $MainPanel/SettingsEditor
 
+# this is set when the plugins main-view is instanced in dialogic.gd
+var editor_interface = null
 
 func _ready():
 	# Adding file dialog to get used by Events
@@ -57,7 +59,14 @@ func _ready():
 	$ToolBar/NewCharactersButton.icon = load("res://addons/dialogic/Images/Toolbar/add-character" + modifier + ".svg")
 	$ToolBar/NewDefinitionButton.icon = load("res://addons/dialogic/Images/Toolbar/add-definition" + modifier + ".svg")
 	$ToolBar/NewThemeButton.icon = load("res://addons/dialogic/Images/Toolbar/add-theme" + modifier + ".svg")
-	$ToolBar/NewThemeButton.icon = load("res://addons/dialogic/Images/Toolbar/add-theme" + modifier + ".svg")
+	
+	var modulate_color = Color.white
+	if not get_constant("dark_theme", "Editor"):
+		modulate_color = get_color("property_color", "Editor")
+	$ToolBar/NewTimelineButton.modulate = modulate_color
+	$ToolBar/NewCharactersButton.modulate = modulate_color
+	$ToolBar/NewDefinitionButton.modulate = modulate_color
+	$ToolBar/NewThemeButton.modulate = modulate_color
 	
 	$ToolBar/FoldTools/ButtonFold.icon = get_icon("GuiTreeArrowRight", "EditorIcons")
 	$ToolBar/FoldTools/ButtonUnfold.icon = get_icon("GuiTreeArrowDown", "EditorIcons")
@@ -72,7 +81,16 @@ func _ready():
 	$ToolBar/FoldTools/ButtonUnfold.connect('pressed', timeline_editor, 'unfold_all_nodes')
 	
 	
+	# Resetting the context menu items and size
+	var context_menus = [
+		$TimelinePopupMenu, $CharacterPopupMenu, $ThemePopupMenu,
+		$DefinitionPopupMenu, $TimelineRootPopupMenu, $CharacterRootPopupMenu,
+		$ThemeRootPopupMenu, $DefinitionRootPopupMenu]
+	for menu in context_menus:
+		menu.clear()
+		menu.rect_size = Vector2(0, 0)
 	# Adding items to context menus
+	
 	$TimelinePopupMenu.add_icon_item(get_icon("Filesystem", "EditorIcons"), 'Show in File Manager')
 	$TimelinePopupMenu.add_icon_item(get_icon("ActionCopy", "EditorIcons"), 'Copy Timeline Name')
 	$TimelinePopupMenu.add_icon_item(get_icon("Remove", "EditorIcons"), 'Remove Timeline')
@@ -212,16 +230,15 @@ func _on_RemoveThemeConfirmation_confirmed():
 
 
 # Godot dialog
-func godot_dialog(filter):
-	editor_file_dialog.mode = EditorFileDialog.MODE_OPEN_FILE
+func godot_dialog(filter, mode = EditorFileDialog.MODE_OPEN_FILE):
+	editor_file_dialog.mode = mode
 	editor_file_dialog.clear_filters()
 	editor_file_dialog.popup_centered_ratio(0.75)
 	editor_file_dialog.add_filter(filter)
 	return editor_file_dialog
 
 
-func godot_dialog_connect(who, method_name):
-	var signal_name = "file_selected"
+func godot_dialog_connect(who, method_name, signal_name = "file_selected"):
 	# Checking if previous connection exists, if it does, disconnect it.
 	if editor_file_dialog.is_connected(
 		signal_name,
