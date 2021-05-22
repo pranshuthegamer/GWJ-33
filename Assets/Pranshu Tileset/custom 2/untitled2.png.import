@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/untitled3.png-1854728783a5351c40b5575b851b7a2d.stex"
+path="res://.import/untitled2.png-3a730753e131e39dfe1aaacc3c60edc6.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Grass_Tileset/custom 2/untitled3.png"
-dest_files=[ "res://.import/untitled3.png-1854728783a5351c40b5575b851b7a2d.stex" ]
+source_file="res://Assets/Pranshu Tileset/custom 2/untitled2.png"
+dest_files=[ "res://.import/untitled2.png-3a730753e131e39dfe1aaacc3c60edc6.stex" ]
 
 [params]
 

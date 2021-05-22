@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/grass_tileset_16x16.png-b39be61b59f70b4945c9ecfd90446562.stex"
+path="res://.import/indoortile.png-486fd4da2ca6ec35ae8c57b247d29bae.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Grass_Tileset/grass_tileset_16x16.png"
-dest_files=[ "res://.import/grass_tileset_16x16.png-b39be61b59f70b4945c9ecfd90446562.stex" ]
+source_file="res://Assets/TilesetV1/indoortile.png"
+dest_files=[ "res://.import/indoortile.png-486fd4da2ca6ec35ae8c57b247d29bae.stex" ]
 
 [params]
 
@@ -20,7 +20,7 @@ compress/hdr_mode=0
 compress/bptc_ldr=0
 compress/normal_map=0
 flags/repeat=0
-flags/filter=false
+flags/filter=true
 flags/mipmaps=false
 flags/anisotropic=false
 flags/srgb=2

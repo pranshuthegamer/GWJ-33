@@ -1,8 +1,9 @@
-[gd_resource type="TileSet" load_steps=58 format=2]
+[gd_resource type="TileSet" load_steps=59 format=2]
 
-[ext_resource path="res://Assets/Grass_Tileset/grass_tileset_16x16.png" type="Texture" id=1]
-[ext_resource path="res://Assets/Grass_Tileset/Custom.png" type="Texture" id=2]
-[ext_resource path="res://Assets/Grass_Tileset/custom 2/Sheet.png" type="Texture" id=3]
+[ext_resource path="res://Assets/Pranshu Tileset/grass_tileset_16x16.png" type="Texture" id=1]
+[ext_resource path="res://Assets/Pranshu Tileset/Custom.png" type="Texture" id=2]
+[ext_resource path="res://Assets/Pranshu Tileset/custom 2/Sheet.png" type="Texture" id=3]
+[ext_resource path="res://Assets/Pranshu Tileset/Wood.png" type="Texture" id=4]
 
 [sub_resource type="ConvexPolygonShape2D" id=1]
 points = PoolVector2Array( 0, 32, 0, 0, 32, 0, 32, 32, 30, 32, 30, 2, 2, 2, 2, 32 )
@@ -576,3 +577,17 @@ points = PoolVector2Array( 32, 32, 0, 32, 0, 0, 32, 0 )
 "shape_transform": Transform2D( 1, 0, 0, 1, 0, 0 )
 } ]
 3/z_index = 0
+4/name = "Wood.png 4"
+4/texture = ExtResource( 4 )
+4/tex_offset = Vector2( 0, 0 )
+4/modulate = Color( 1, 1, 1, 1 )
+4/region = Rect2( 0, 0, 32, 32 )
+4/tile_mode = 0
+4/occluder_offset = Vector2( 0, 0 )
+4/navigation_offset = Vector2( 0, 0 )
+4/shape_offset = Vector2( 0, 0 )
+4/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+4/shape_one_way = false
+4/shape_one_way_margin = 0.0
+4/shapes = [  ]
+4/z_index = 0

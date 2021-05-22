@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/untitled4.png-c44c017c9ae1ea5e21104016c80d1b38.stex"
+path="res://.import/blackboard.png-2cbb56e0541e1fefd30469d9096c919f.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Grass_Tileset/custom 2/untitled4.png"
-dest_files=[ "res://.import/untitled4.png-c44c017c9ae1ea5e21104016c80d1b38.stex" ]
+source_file="res://Assets/sprites/blackboard.png"
+dest_files=[ "res://.import/blackboard.png-2cbb56e0541e1fefd30469d9096c919f.stex" ]
 
 [params]
 

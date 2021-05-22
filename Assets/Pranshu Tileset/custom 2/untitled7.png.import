@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Sheet.png-9d65b39956e3728856042430b70f6583.stex"
+path="res://.import/untitled7.png-a241f21bd2cc6967f2ffffee0cd48b4b.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Grass_Tileset/custom 2/Sheet.png"
-dest_files=[ "res://.import/Sheet.png-9d65b39956e3728856042430b70f6583.stex" ]
+source_file="res://Assets/Pranshu Tileset/custom 2/untitled7.png"
+dest_files=[ "res://.import/untitled7.png-a241f21bd2cc6967f2ffffee0cd48b4b.stex" ]
 
 [params]
 
@@ -20,7 +20,7 @@ compress/hdr_mode=0
 compress/bptc_ldr=0
 compress/normal_map=0
 flags/repeat=0
-flags/filter=false
+flags/filter=true
 flags/mipmaps=false
 flags/anisotropic=false
 flags/srgb=2

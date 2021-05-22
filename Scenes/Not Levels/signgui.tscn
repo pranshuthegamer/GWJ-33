@@ -55,7 +55,8 @@ margin_right = 323.2
 margin_bottom = 194.4
 rect_scale = Vector2( 2, 2 )
 custom_fonts/font = SubResource( 2 )
-text = "ayy"
+text = "If you see this then the sign code is broken"
+autowrap = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
