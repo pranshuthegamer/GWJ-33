@@ -2,7 +2,7 @@
 
 [ext_resource path="res://Assets/Signs/Sign1.png" type="Texture" id=1]
 
-[sub_resource type="GDScript" id=2]
+[sub_resource type="GDScript" id=1]
 script/source = "extends Node2D
 
 
@@ -20,7 +20,7 @@ func _on_Button_pressed():
 [node name="Sign" type="Node2D"]
 z_index = 1
 z_as_relative = false
-script = SubResource( 2 )
+script = SubResource( 1 )
 signtext = "Bello"
 
 [node name="Sprite" type="Sprite" parent="."]
