@@ -2,3 +2,6 @@
 **/*.md5
 **/*.stex
 .import/*
+
+# Generated git files.
+*.orig

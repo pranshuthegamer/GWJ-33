@@ -4,11 +4,7 @@
 [ext_resource path="res://Scripts/Entity.gd" type="Script" id=2]
 
 [sub_resource type="RectangleShape2D" id=1]
-<<<<<<< HEAD
-extents = Vector2( 7.21567, 8.02701 )
-=======
 extents = Vector2( 8.35563, 6.03797 )
->>>>>>> master
 
 [sub_resource type="Animation" id=2]
 resource_name = "Idle"
@@ -47,13 +43,8 @@ hframes = 3
 vframes = 3
 region_rect = Rect2( 140.319, 66.8538, 328.176, 267.723 )
 
-<<<<<<< HEAD
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( 0, 1.99713 )
-=======
 [node name="LegColliders" type="CollisionShape2D" parent="."]
 position = Vector2( 0, 18 )
->>>>>>> master
 shape = SubResource( 1 )
 
 [node name="Camera2D" type="Camera2D" parent="."]
