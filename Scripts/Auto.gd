@@ -25,3 +25,12 @@ func _cng_scene(scene,caller):
 	caller.queue_free()
 	Char.get_node("Camera2D").current = true
 	Char.transform = tempscene.get_node("Start").transform
+
+#called when you want a sign to show up in gui
+func _add_sign(text,signtexture):
+#	signtexture = signtexture.replace(".png","")
+#	signtexture = signtexture + "gui.png"
+	var Sign = preload("res://Scenes/Not Levels/signgui.tscn")
+	Sign = Sign.instance()
+	$"/root/Main/Gui".add_child(Sign)
+	Sign.get_child(1).text = text
