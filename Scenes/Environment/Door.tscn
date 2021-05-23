@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Scripts/Door.gd" type="Script" id=1]
+[ext_resource path="res://Scenes/InteractiveArea/interactive_area.tscn" type="PackedScene" id=2]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 32, 1 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 32, 10 )
+
+[node name="Door" type="StaticBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource( 1 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+shape = SubResource( 1 )
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+position = Vector2( -32, 0 )
+color = Color( 0.1875, 0.144287, 0.101074, 1 )
+offset = Vector2( 32, 0 )
+polygon = PoolVector2Array( -32, -1, 32, -1, 32, 1, -32, 1 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="InteractiveArea" parent="." instance=ExtResource( 2 )]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractiveArea"]
+shape = SubResource( 2 )
