@@ -4,6 +4,7 @@
 
 [node name="InteractiveArea" type="Area2D"]
 collision_layer = 4
+collision_mask = 4
 script = ExtResource( 1 )
 
 [connection signal="area_entered" from="." to="." method="_on_InteractiveArea_area_entered"]

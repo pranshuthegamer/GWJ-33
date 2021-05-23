@@ -7,6 +7,10 @@ onready var collider: CollisionShape2D = $Collider
 onready var door_sprite: Polygon2D = $Polygon2D
 
 
+func _ready() -> void:
+	set_process_unhandled_input(false)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		is_open = !is_open
@@ -20,5 +24,5 @@ func _physics_process(_delta: float) -> void:
 	set_physics_process(false)
 
 
-func _on_InteractiveArea_state_change(p_interact_state: bool):
+func _on_InteractiveArea_state_change(p_interact_state: bool) -> void:
 	set_process_unhandled_input(p_interact_state)

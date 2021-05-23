@@ -33,3 +33,5 @@ __meta__ = {
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractiveArea"]
 shape = SubResource( 2 )
+
+[connection signal="state_change" from="InteractiveArea" to="." method="_on_InteractiveArea_state_change"]
